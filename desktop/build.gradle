@@ -1,0 +1,48 @@
+apply plugin: "java"
+apply plugin: "application"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+sourceSets {
+    main {
+        java {
+            srcDir "src/main/java"
+        }
+    }
+}
+
+ext {
+    gdxVersion = "1.12.1"
+}
+
+application {
+    mainClass = "com.marioexample.desktop.DesktopLauncher"
+}
+
+dependencies {
+    implementation project(":core")
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+    implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+}
+
+run {
+    workingDir = file("../assets")
+}
+
+// Packages a standalone, single runnable Fat JAR with all assets embedded
+task dist(type: Jar) {
+    archiveBaseName.set("JohnWicksAdventure")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes 'Main-Class': application.mainClass.get()
+    }
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+    from(file("../assets")) {
+        exclude "unused assets/**"
+    }
+}
