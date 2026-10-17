@@ -10,9 +10,9 @@ An action-packed 2D side-scrolling platformer developed in **Java** using the **
 ---
 
 ## 🔗 Quick Links
-- **Play Online / Download Demo:** [itch.io Link Coming Soon](#) *(Upload `JohnWicksAdventure.jar` to itch.io)*
-- **Gameplay Walkthrough Video:** [YouTube Video Link Coming Soon](#)
-- **Developer:** [Muhammad Rehan](https://github.com/Muhammad-Rehan20)
+- **Play / Download Game:** [https://huzaifa-dev78.itch.io/john-wick-adventure](https://huzaifa-dev78.itch.io/john-wick-adventure)
+- **Source Code:** [https://github.com/huzaifa-dev78/John-Wick-Adventure](https://github.com/huzaifa-dev78/John-Wick-Adventure)
+- **Developer:** [Huzaifa (@huzaifa-dev78)](https://github.com/huzaifa-dev78)
 
 ---
 
@@ -100,6 +100,5 @@ java -jar desktop/build/libs/JohnWicksAdventure.jar
 ---
 
 ## 👤 Author
-
-**Muhammad Rehan**
-- GitHub: [@Muhammad-Rehan20](https://github.com/Muhammad-Rehan20)
+- **Huzaifa** — [@huzaifa-dev78](https://github.com/huzaifa-dev78)
+- Co-developed with Muhammad Rehan — [@Muhammad-Rehan20](https://github.com/Muhammad-Rehan20)
