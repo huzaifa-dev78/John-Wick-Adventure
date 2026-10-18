@@ -9,7 +9,6 @@ public class MainGame extends Game {
 
     @Override
     public void create() {
-        com.badlogic.gdx.graphics.g2d.GlyphRunFix.apply();
         batch = new SpriteBatch();
         // Start with the main menu screen
         setScreen(new MainMenuScreen(this));
