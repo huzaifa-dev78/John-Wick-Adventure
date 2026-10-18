@@ -625,8 +625,6 @@ public class GameplayScreen implements Screen {
         // OOP CONCEPT: We're creating Texture objects to hold image data.
         // These are loaded from files in the assets folder.
         backgroundTexture = new Texture(Gdx.files.internal("background.jpg"));
-        backgroundTexture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.ClampToEdge);
-        backgroundRegion = new TextureRegion(backgroundTexture);
         groundTexture = new Texture(Gdx.files.internal("ground.png"));
         standingTexture = new Texture(Gdx.files.internal("standing.png"));
         jumpTexture = new Texture(Gdx.files.internal("jump.png"));
@@ -774,9 +772,9 @@ public class GameplayScreen implements Screen {
         platforms.add(new Rectangle(24.2f, 3.2f, tileW, tileH));  // Launchpad over Pit 2 (Section 2)
         platforms.add(new Rectangle(39.2f, 3.2f, tileW, tileH));  // Launchpad over Pit 3 (Section 3)
 
-        // Tactical vantage platforms in boss arena (spaced cleanly away from Dragon flight path)
-        platforms.add(new Rectangle(BOSS_ARENA_START_X + 2.5f, 2.4f, 3.2f, tileH));  // Low cover at x=48.0
-        platforms.add(new Rectangle(BOSS_ARENA_START_X + 7.0f, 3.8f, 3.5f, tileH));  // Sniper perch at x=52.5 to 56.0
+        // Tactical vantage platforms in boss arena (elevated to y=4.2f so John Wick (2.5m) has 3.0m ground clearance!)
+        platforms.add(new Rectangle(BOSS_ARENA_START_X + 2.5f, 4.2f, 3.2f, tileH));  // Elevated cover at x=48.0
+        platforms.add(new Rectangle(BOSS_ARENA_START_X + 7.0f, 4.2f, 3.5f, tileH));  // Sniper perch at x=52.5 to 56.0
 
         // Hazards: centered on open ground sections with generous open sky above them
         float hazardY = 1.2f;
@@ -833,8 +831,8 @@ public class GameplayScreen implements Screen {
         placeCoin(32.0f, 2.2f);
 
         // Boss arena tactical coins
-        placeCoin(49.6f, 3.6f);  // On low cover platform
-        placeCoin(54.2f, 5.0f);  // On high sniper perch
+        placeCoin(49.6f, 5.4f);  // On elevated cover platform
+        placeCoin(54.2f, 5.4f);  // On elevated sniper perch
 
         setupEnemies();
     }
@@ -856,8 +854,8 @@ public class GameplayScreen implements Screen {
             enemyFrozen[i] = false;
             enemyFrozenTimer[i] = 0f;
         }
-        // Ground patrol enemies placed cleanly away from thorns and pit edges:
-        setEnemy(0, 4.0f, 1.2f, 2.5f, 5.5f, 1.5f);     // Section 1: safe before thorn at 6.8
+        // Ground patrol enemies placed cleanly away from spawn, thorns, and pit edges:
+        setEnemy(0, 9.5f, 1.2f, 8.5f, 11.5f, 1.5f);     // Section 1: safe after thorn 1 at 6.8
         setEnemy(1, 18.0f, 1.2f, 16.5f, 19.8f, 1.6f);  // Section 2: safe before thorn at 21.2
         setEnemy(2, 33.0f, 1.2f, 31.5f, 34.8f, 1.5f);  // Section 3: safe before thorn at 36.2
     }
@@ -969,27 +967,15 @@ public class GameplayScreen implements Screen {
 
         worldCamera.update();
 
-        // Parallax background drawn in screen space, covering the full window
+        // Draw background stretched cleanly across the screen
         int screenW = Gdx.graphics.getWidth();
         int screenH = Gdx.graphics.getHeight();
-        float parallax = 0.5f; // stronger scroll so wide background is noticeable
-        float cameraX = worldCamera.position.x;
-        float texWidth = backgroundTexture.getWidth();
-
-        // Map cameraX in [0, levelWidth] into a [0, 1 - uSpan] UV offset
-        float uSpan = (float) screenW / texWidth;
-        float t = MathUtils.clamp(cameraX / levelWidth, 0f, 1f);
-        float uOffset = t * (1f - uSpan) * parallax;
-        backgroundRegion.setU(uOffset);
-        backgroundRegion.setU2(uOffset + uSpan);
-        backgroundRegion.setV(0f);
-        backgroundRegion.setV2(1f);
 
         hudCamera.setToOrtho(false, screenW, screenH);
         hudCamera.update();
         batch.setProjectionMatrix(hudCamera.combined);
         batch.begin();
-        batch.draw(backgroundRegion, 0, 0, screenW, screenH);
+        batch.draw(backgroundTexture, 0, 0, screenW, screenH);
         batch.end();
 
         // Draw world using world camera
@@ -1473,8 +1459,8 @@ public class GameplayScreen implements Screen {
             }
         }
 
-        // Check falling off world
-        if (playerRect.y < -5) {
+        // Check falling off world - fast pit recovery
+        if (playerRect.y < -1.5f) {
             killPlayer();
         }
 
@@ -1484,14 +1470,18 @@ public class GameplayScreen implements Screen {
         // Activate boss fight only when player reaches boss arena (boss is on screen)
         if (!bossActivated && bossRect != null) {
             float playerCenterX = playerRect.x + playerRect.width / 2f;
-            if (playerCenterX >= BOSS_ARENA_START_X + 1f) {
+            if (playerCenterX >= BOSS_ARENA_START_X + 1.5f) {
                 bossActivated = true;
-                // Switch to boss fight music
-                if (backgroundMusic != null && backgroundMusic.isPlaying()) {
-                    backgroundMusic.stop();
-                }
-                if (bossFightMusic != null) {
-                    bossFightMusic.play();
+                // Switch to boss fight music safely
+                try {
+                    if (backgroundMusic != null && backgroundMusic.isPlaying()) {
+                        backgroundMusic.stop();
+                    }
+                    if (bossFightMusic != null) {
+                        bossFightMusic.play();
+                    }
+                } catch (Exception e) {
+                    Gdx.app.log("Sound", "Could not play boss fight music: " + e.getMessage());
                 }
             }
         }
