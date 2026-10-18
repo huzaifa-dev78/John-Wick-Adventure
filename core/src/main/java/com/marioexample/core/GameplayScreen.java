@@ -766,22 +766,28 @@ public class GameplayScreen implements Screen {
         // Floating launchpad / vantage platforms at pit edges
         // Placed AFTER the thorns, giving the player an elevated launchpad to leap to the next part!
         // Above the thorns, the sky is 100% OPEN so John Wick can jump over thorns without head-bumping!
-        float tileW = 3.2f;
         float tileH = 0.8f;
-        platforms.add(new Rectangle(9.2f, 3.2f, tileW, tileH));   // Launchpad over Pit 1 (Section 1)
-        platforms.add(new Rectangle(24.2f, 3.2f, tileW, tileH));  // Launchpad over Pit 2 (Section 2)
-        platforms.add(new Rectangle(39.2f, 3.2f, tileW, tileH));  // Launchpad over Pit 3 (Section 3)
+        // 2. Stepping platforms over each pit so player can cleanly jump across!
+        platforms.add(new Rectangle(13.0f, 2.0f, 2.0f, tileH));   // Stepping stone across Pit 1
+        platforms.add(new Rectangle(28.0f, 2.0f, 2.0f, tileH));   // Stepping stone across Pit 2
+        platforms.add(new Rectangle(43.0f, 2.0f, 2.0f, tileH));   // Stepping stone across Pit 3
 
-        // Tactical vantage platforms in boss arena (elevated to y=4.2f so John Wick (2.5m) has 3.0m ground clearance!)
-        platforms.add(new Rectangle(BOSS_ARENA_START_X + 2.5f, 4.2f, 3.2f, tileH));  // Elevated cover at x=48.0
-        platforms.add(new Rectangle(BOSS_ARENA_START_X + 7.0f, 4.2f, 3.5f, tileH));  // Sniper perch at x=52.5 to 56.0
+        // 3. In-level elevated stepping platforms
+        platforms.add(new Rectangle(8.5f, 2.6f, 2.8f, tileH));    // Section 1 stepping platform
+        platforms.add(new Rectangle(23.5f, 2.6f, 2.8f, tileH));   // Section 2 stepping platform
+        platforms.add(new Rectangle(38.5f, 2.6f, 2.8f, tileH));   // Section 3 stepping platform
 
-        // Hazards: centered on open ground sections with generous open sky above them
+        // 4. Boss Arena climbing staircase obstacles (gradual height from 2.4f up to 4.4f)
+        platforms.add(new Rectangle(BOSS_ARENA_START_X + 2.5f, 2.4f, 3.0f, tileH));  // Step 1: x=48.0, y=2.4 (easy jump from ground 1.2)
+        platforms.add(new Rectangle(BOSS_ARENA_START_X + 6.5f, 3.4f, 3.0f, tileH));  // Step 2: x=52.0, y=3.4 (climb from step 1)
+        platforms.add(new Rectangle(BOSS_ARENA_START_X + 10.5f, 4.4f, 3.0f, tileH)); // Step 3: x=56.0, y=4.4 (high sniper perch)
+
+        // 5. Hazards: centered on open ground sections
         float hazardY = 1.2f;
         float hazardSize = 1.0f;
-        hazards.add(new Rectangle(6.8f, hazardY, hazardSize, hazardSize));   // Section 1 thorn (open air above)
-        hazards.add(new Rectangle(21.2f, hazardY, hazardSize, hazardSize));  // Section 2 thorn (open air above)
-        hazards.add(new Rectangle(36.2f, hazardY, hazardSize, hazardSize));  // Section 3 thorn (open air above)
+        hazards.add(new Rectangle(5.5f, hazardY, hazardSize, hazardSize));   // Section 1 thorn
+        hazards.add(new Rectangle(19.5f, hazardY, hazardSize, hazardSize));  // Section 2 thorn
+        hazards.add(new Rectangle(34.5f, hazardY, hazardSize, hazardSize));  // Section 3 thorn
 
         // Extraction door at the far right of the boss arena
         float portalWidth = 4.2f;
@@ -801,38 +807,39 @@ public class GameplayScreen implements Screen {
             float bossAspect = (float) bossTexture.getHeight() / (float) bossTexture.getWidth();
             float bossHeight = bossWidth * bossAspect;
             bossBaseY = 3.0f;
-            float bossX = BOSS_ARENA_START_X + 13.0f; // Centered on right half around x=58.5
+            float bossX = BOSS_ARENA_START_X + 14.0f; // Centered on right half around x=59.5
             bossRect = new Rectangle(bossX, bossBaseY, bossWidth, bossHeight);
         } else {
-            bossRect = new Rectangle(BOSS_ARENA_START_X + 13.0f, bossBaseY, 6f, 6f);
+            bossRect = new Rectangle(BOSS_ARENA_START_X + 14.0f, bossBaseY, 6f, 6f);
         }
         bossAlive = true;
         bossHealth = 25;
         bossFloatTimer = 0f;
         bossActivated = false;
 
-        // Coins placed cleanly on launchpad platforms and safe jump arcs (never on thorns!)
+        // Coins placed cleanly on platforms and jump arcs
         for (int i = 0; i < MAX_COINS; i++) {
             coinActive[i] = false;
         }
-        // Jump arcs over pits
-        placeCoin(14.0f, 3.2f); // Over pit 1
-        placeCoin(29.0f, 3.2f); // Over pit 2
-        placeCoin(44.0f, 3.2f); // Over pit 3
+        // Jump arcs over pits / stepping stones
+        placeCoin(14.0f, 3.4f); // Over pit 1 stepping stone
+        placeCoin(29.0f, 3.4f); // Over pit 2 stepping stone
+        placeCoin(44.0f, 3.4f); // Over pit 3 stepping stone
 
-        // Reward coins on top of launchpad platforms
-        placeCoin(10.8f, 4.4f);  // On launchpad 1
-        placeCoin(25.8f, 4.4f);  // On launchpad 2
-        placeCoin(40.8f, 4.4f);  // On launchpad 3
+        // Reward coins on top of elevated platforms
+        placeCoin(9.9f, 3.8f);   // On Section 1 platform
+        placeCoin(24.9f, 3.8f);  // On Section 2 platform
+        placeCoin(39.9f, 3.8f);  // On Section 3 platform
 
         // Ground safe rewards
         placeCoin(3.0f, 2.2f);
         placeCoin(17.0f, 2.2f);
         placeCoin(32.0f, 2.2f);
 
-        // Boss arena tactical coins
-        placeCoin(49.6f, 5.4f);  // On elevated cover platform
-        placeCoin(54.2f, 5.4f);  // On elevated sniper perch
+        // Boss arena staircase coins
+        placeCoin(49.5f, 3.6f);  // Step 1
+        placeCoin(53.5f, 4.6f);  // Step 2
+        placeCoin(57.5f, 5.6f);  // Step 3 sniper perch
 
         setupEnemies();
     }
@@ -1358,21 +1365,21 @@ public class GameplayScreen implements Screen {
 
         onGround = false;
 
-        // Horizontal collisions with platforms (only block if hitting from the side, not from above/below)
+        // Horizontal collisions with platforms (only solid ground blocks horizontally; floating platforms are jump-through)
         for (Rectangle p : platforms) {
+            boolean isFloating = (p.y > 0.5f);
+            if (isFloating) continue; // Floating platforms allow passing through horizontally!
+
             if (hitRectX.overlaps(p)) {
-                // Only block horizontal movement if we're hitting from the side
-                // Check if player is on top of platform (player bottom is above platform top with small tolerance)
                 float playerBottom = playerRect.y;
                 float playerTop = playerRect.y + playerRect.height;
                 float platformTop = p.y + p.height;
                 float platformBottom = p.y;
                 
-                boolean onTop = playerBottom >= platformTop - 0.2f;  // player standing on platform
-                boolean below = playerTop <= platformBottom + 0.2f;   // player below platform
+                boolean onTop = playerBottom >= platformTop - 0.2f;
+                boolean below = playerTop <= platformBottom + 0.2f;
                 
                 if (!onTop && !below) {
-                    // Hitting from the side - block movement
                     if (playerVX > 0) {
                         newX = p.x - playerRect.width;
                     } else if (playerVX < 0) {
@@ -1380,18 +1387,14 @@ public class GameplayScreen implements Screen {
                     }
                     playerVX = 0;
                     newRectX.x = newX;
-                    // Keep hitbox in sync with base rect
                     hitRectX.x = newRectX.x + insetX;
                 }
-                // If on top or below, allow horizontal movement to continue
             }
         }
 
-        // Vertical collisions with platforms.
-        // Use a small "feet" hitbox at the bottom of the player so that only the visible
-        // boots/legs interact with the ground, not transparent pixels under the gun.
-        float feetInsetX = playerRect.width * 0.25f;      // same side inset as getPlayerHitRect
-        float feetHeight = playerRect.height * 0.28f;     // bottom 28% of the sprite are the feet/legs
+        // Vertical collisions with platforms (one-way landing on floating platforms)
+        float feetInsetX = playerRect.width * 0.25f;
+        float feetHeight = playerRect.height * 0.28f;
         Rectangle feetRectY = new Rectangle(
                 newRectY.x + feetInsetX,
                 newRectY.y,
@@ -1399,9 +1402,8 @@ public class GameplayScreen implements Screen {
                 feetHeight
         );
 
-        // Separate smaller hitbox for the head when jumping up into platforms
         float headInsetX = playerRect.width * 0.25f;
-        float headHeight = playerRect.height * 0.18f;     // top 18% is the head/upper gun
+        float headHeight = playerRect.height * 0.18f;
         Rectangle headRectY = new Rectangle(
                 newRectY.x + headInsetX,
                 newRectY.y + newRectY.height - headHeight,
@@ -1410,20 +1412,23 @@ public class GameplayScreen implements Screen {
         );
 
         for (Rectangle p : platforms) {
-            if (playerVY < 0) {
-                // Landing / falling down: use feet hitbox only so gun/upper body do not interact
+            boolean isFloating = (p.y > 0.5f);
+            if (playerVY <= 0) {
+                // Landing / falling down:
+                // For floating platforms, land if feet overlap AND previous player bottom was at or above platform top
                 if (feetRectY.overlaps(p)) {
-                    newY = p.y + p.height;
-                    onGround = true;
-                    // Reset coyote time and jump hold timer when landing
-                    timeSinceGrounded = 0f;
-                    jumpHoldTimer = 0f;
-                    playerVY = 0;
-                    newRectY.y = newY;
+                    if (!isFloating || (playerRect.y >= p.y + p.height - 0.4f)) {
+                        newY = p.y + p.height;
+                        onGround = true;
+                        timeSinceGrounded = 0f;
+                        jumpHoldTimer = 0f;
+                        playerVY = 0;
+                        newRectY.y = newY;
+                    }
                 }
             } else if (playerVY > 0) {
-                // Jumping up: use head hitbox to bump into platforms above
-                if (headRectY.overlaps(p)) {
+                // Jumping up: only solid ground (ceiling) blocks upward movement; floating platforms can be jumped through!
+                if (!isFloating && headRectY.overlaps(p)) {
                     newY = p.y - playerRect.height;
                     playerVY = 0;
                     newRectY.y = newY;
@@ -1564,11 +1569,11 @@ public class GameplayScreen implements Screen {
     private void updateBoss(float delta) {
         if (!bossAlive || bossRect == null || !bossActivated) return;
         bossFloatTimer += delta;
-        // Keep vertical position fixed so fire always leaves at same height as player bullets
-        bossRect.y = bossBaseY;
+        // Boss hovers and swoops smoothly with a majestic wing flap sine wave
+        bossRect.y = bossBaseY + MathUtils.sin(bossFloatTimer * 2f) * 1.0f;
 
         // Horizontal patrol strictly on the right side of the arena
-        float leftLimit = BOSS_ARENA_START_X + 12.0f;  // x = 58.0f (never clips into player platforms)
+        float leftLimit = BOSS_ARENA_START_X + 13.0f;  // x = 58.5f (never clips into player platforms)
         float rightLimit = BOSS_ARENA_END_X - 6.5f;    // x = 63.5f (in front of extraction door)
         bossRect.x += bossVX * delta;
         if (bossRect.x < leftLimit) {
