@@ -537,6 +537,9 @@ public class GameplayScreen implements Screen {
     private float playerAlpha = 1.0f;  // Transparency for fade-out effect when reaching portal (1.0 = opaque, 0.0 = invisible)
     private float levelCompleteTimer = 0f;  // Timer for fade-out animation
 
+    // Virtual Touch Controls (Android / Touchscreens)
+    private TouchControls touchControls = new TouchControls();
+
     // ========================================================================
     // SECTION 11: REUSABLE COLLISION RECTANGLES
     // ========================================================================
@@ -1153,9 +1156,11 @@ public class GameplayScreen implements Screen {
             return;
         }
 
+        touchControls.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+
         // Proper physics-based horizontal movement with acceleration/deceleration
-        boolean leftPressed = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A);
-        boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D);
+        boolean leftPressed = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A) || touchControls.isLeftPressed();
+        boolean rightPressed = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D) || touchControls.isRightPressed();
         
         float controlMultiplier = onGround ? 1f : AIR_CONTROL;
         float acceleration = PLAYER_ACCELERATION * controlMultiplier;
@@ -1202,10 +1207,12 @@ public class GameplayScreen implements Screen {
         // Jump input handling with coyote time and variable jump height
         boolean jumpJustPressed = Gdx.input.isKeyJustPressed(Input.Keys.SPACE)
                 || Gdx.input.isKeyJustPressed(Input.Keys.W)
-                || Gdx.input.isKeyJustPressed(Input.Keys.UP);
+                || Gdx.input.isKeyJustPressed(Input.Keys.UP)
+                || touchControls.isJumpJustPressed();
         jumpHeld = Gdx.input.isKeyPressed(Input.Keys.SPACE)
                 || Gdx.input.isKeyPressed(Input.Keys.W)
-                || Gdx.input.isKeyPressed(Input.Keys.UP);
+                || Gdx.input.isKeyPressed(Input.Keys.UP)
+                || touchControls.isJumpPressed();
 
         // Check if can jump (on ground or within coyote time)
         boolean canJump = onGround || timeSinceGrounded < COYOTE_TIME;
@@ -1237,7 +1244,15 @@ public class GameplayScreen implements Screen {
             currentBulletType = BULLET_TYPE_ICE;
         }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.K) && bulletCooldownTimer <= 0) {
+        if (touchControls.isFirePressed() && bulletCooldownTimer <= 0) {
+            currentBulletType = BULLET_TYPE_FIRE;
+            shootBullet();
+            bulletCooldownTimer = BULLET_COOLDOWN;
+        } else if (touchControls.isIcePressed() && bulletCooldownTimer <= 0) {
+            currentBulletType = BULLET_TYPE_ICE;
+            shootBullet();
+            bulletCooldownTimer = BULLET_COOLDOWN;
+        } else if (Gdx.input.isKeyPressed(Input.Keys.K) && bulletCooldownTimer <= 0) {
             shootBullet();
             bulletCooldownTimer = BULLET_COOLDOWN;
         }
@@ -1937,6 +1952,11 @@ public class GameplayScreen implements Screen {
         // 3. Controls hint banner
         GameUI.renderControlsHint(batch, shapeRenderer, font, layout,
             "[ ◄ / ► / A / D ] Move   •   [ SPACE / W ] Jump   •   [ K ] Shoot Fire/Ice   •   [ ESC ] Menu", screenW);
+
+        // Virtual Touch Controls (Android / Touchscreens)
+        if (!playerDead && !levelComplete) {
+            touchControls.render(batch, shapeRenderer, font, layout, true);
+        }
 
         // 4. Modals
         boolean[] menuClicked = new boolean[1];

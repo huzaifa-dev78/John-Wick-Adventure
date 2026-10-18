@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>John Wick's Adventure - Play Online</title>
+    <meta name="description" content="Action-packed 2D platformer starring John Wick. Play directly in your browser on PC, Mac, and Android!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050608;
+            font-family: 'Rajdhani', -apple-system, sans-serif;
+            color: #e5e7eb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Ambient tactical vignette background */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(30, 24, 16, 0.45) 0%, rgba(5, 6, 8, 0.95) 85%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        #canvas {
+            display: block;
+            outline: none;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 15px rgba(245, 190, 50, 0.15);
+            background-color: #000;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* High Table Loading Bar */
+        #progress {
+            position: absolute;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(8, 10, 15, 0.92);
+            padding: 30px 40px;
+            border-radius: 8px;
+            border: 1px solid rgba(245, 190, 50, 0.4);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(245, 190, 50, 0.2);
+            backdrop-filter: blur(8px);
+            width: min(90vw, 480px);
+        }
+
+        .loading-title {
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: #f7d050;
+            text-shadow: 0 0 12px rgba(247, 208, 80, 0.5);
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .loading-subtitle {
+            font-size: 13px;
+            letter-spacing: 2px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            margin-bottom: 22px;
+            text-align: center;
+        }
+
+        #progress-box {
+            width: 100%;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(247, 208, 80, 0.5);
+            border-radius: 4px;
+            padding: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #d49520, #ffd359, #fff2a8);
+            border-radius: 2px;
+            box-shadow: 0 0 15px rgba(255, 211, 89, 0.7);
+            transition: width 0.15s ease-out;
+        }
+
+        .loading-status {
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            color: #d1d5db;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        /* Start / Audio Unlock Overlay */
+        #start-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(5, 6, 8, 0.85);
+            backdrop-filter: blur(6px);
+        }
+
+        .start-card {
+            background: rgba(12, 14, 20, 0.95);
+            border: 1.5px solid #d49520;
+            border-radius: 12px;
+            padding: 36px 44px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(212, 149, 32, 0.25);
+            text-align: center;
+            max-width: 520px;
+            width: 90%;
+        }
+
+        .start-card h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: #ffd359;
+            text-shadow: 0 0 15px rgba(255, 211, 89, 0.6);
+            margin-bottom: 8px;
+        }
+
+        .start-card p {
+            color: #9ca3af;
+            font-size: 14px;
+            letter-spacing: 1.5px;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #1b662d 0%, #2bb84d 100%);
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            padding: 14px 38px;
+            border: 1px solid #75e892;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 0 25px rgba(43, 184, 77, 0.5);
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .start-btn:hover, .start-btn:active {
+            transform: scale(1.04);
+            box-shadow: 0 0 35px rgba(43, 184, 77, 0.8);
+            background: linear-gradient(135deg, #24843b 0%, #34d65c 100%);
+        }
+
+        .start-hints {
+            margin-top: 22px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 12px;
+            color: #9ca3af;
+            letter-spacing: 1px;
+        }
+
+        .hint-badge {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Top Corner Action Controls (Fullscreen) */
+        #top-controls {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 15;
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: rgba(12, 14, 20, 0.85);
+            color: #f3f4f6;
+            border: 1px solid rgba(247, 208, 80, 0.4);
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .action-btn:hover {
+            border-color: #f7d050;
+            background: rgba(247, 208, 80, 0.2);
+            color: #ffd359;
+            transform: scale(1.08);
+        }
+
+        /* Landscape orientation guidance for mobile devices */
+        #rotate-hint {
+            display: none;
+            position: fixed;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(212, 149, 32, 0.95);
+            color: #050608;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 6px 18px;
+            border-radius: 20px;
+            z-index: 30;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+        }
+
+        @media (orientation: portrait) and (max-width: 900px) {
+            #rotate-hint {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+    <div id="game-wrapper">
+        <!-- High Table Asset Loading Interface -->
+        <div id="progress">
+            <div class="loading-title">JOHN WICK'S ADVENTURE</div>
+            <div class="loading-subtitle">THE CONTINENTAL // SYSTEM AUTHORIZATION</div>
+            <div id="progress-box">
+                <div id="progress-bar"></div>
+            </div>
+            <div class="loading-status" id="loading-status">PREPARING TACTICAL ASSETS...</div>
+        </div>
+
+        <!-- Start / Audio Resume Overlay -->
+        <div id="start-overlay">
+            <div class="start-card">
+                <h1>JOHN WICK</h1>
+                <p>High Table Tactical Operation Ready</p>
+                <button class="start-btn" id="start-btn" onclick="startGame()">ENTER COMBAT</button>
+                <div class="start-hints">
+                    <div class="hint-badge">🖥 PC: WASD / ARROWS + SPACE + K</div>
+                    <div class="hint-badge">📱 MOBILE: TOUCH VIRTUAL D-PAD</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Corner Controls -->
+        <div id="top-controls">
+            <button class="action-btn" id="fullscreen-btn" title="Toggle Fullscreen" onclick="toggleFullscreen()">⛶</button>
+        </div>
+
+        <!-- Mobile Landscape Rotation Hint -->
+        <div id="rotate-hint">🔄 Rotate phone to landscape for optimal combat</div>
+
+        <!-- The WebGL Canvas where LibGDX renders -->
+        <canvas id="canvas" width="960" height="640"></canvas>
+    </div>
+
+    <!-- Howler Audio Backend -->
+    <script src="howler.js"></script>
+
+    <!-- LibGDX Compiled Game -->
+    <script src="app.js"></script>
+
+    <script>
+        // Responsive Canvas Scaling
+        const canvas = document.getElementById("canvas");
+        const GAME_RATIO = 960 / 640;
+
+        function resizeCanvas() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            let displayW, displayH;
+
+            if (w / h > GAME_RATIO) {
+                displayH = h;
+                displayW = h * GAME_RATIO;
+            } else {
+                displayW = w;
+                displayH = w / GAME_RATIO;
+            }
+
+            canvas.style.width = Math.floor(displayW) + "px";
+            canvas.style.height = Math.floor(displayH) + "px";
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+        window.addEventListener("orientationchange", resizeCanvas);
+        resizeCanvas();
+
+        // Prevent browser scrolling and touch defaults
+        window.addEventListener("keydown", function(e) {
+            if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(e.code) > -1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener("touchmove", function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Fullscreen Toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) elem.requestFullscreen();
+                else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }
+        }
+
+        // WebAudio unlocking
+        function resumeWebAudio() {
+            try {
+                if (typeof Howler !== 'undefined' && Howler.ctx && Howler.ctx.state === 'suspended') {
+                    Howler.ctx.resume();
+                }
+            } catch (err) {
+                console.warn("Audio unlock attempted:", err);
+            }
+        }
+
+        function startGame() {
+            resumeWebAudio();
+            document.getElementById("start-overlay").style.display = "none";
+        }
+
+        // Monitor asset loading completion
+        const progressEl = document.getElementById("progress");
+        const startOverlay = document.getElementById("start-overlay");
+
+        const progressObserver = new MutationObserver(function() {
+            if (progressEl.style.display === "none") {
+                startOverlay.style.display = "flex";
+                progressObserver.disconnect();
+            }
+        });
+        progressObserver.observe(progressEl, { attributes: true, attributeFilter: ["style"] });
+
+        // Launch TeaVM application
+        window.addEventListener("load", function() {
+            try {
+                if (typeof main === "function") {
+                    main();
+                } else {
+                    console.log("Waiting for game module...");
+                }
+            } catch (err) {
+                console.error("Game boot error:", err);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -144,6 +144,9 @@ public class LevelTwoScreen implements Screen {
     private boolean[] bulletActive = new boolean[MAX_BULLETS];
     private float bulletCooldownTimer = 0f;
 
+    // Virtual Touch Controls (Android / Touchscreens)
+    private TouchControls touchControls = new TouchControls();
+
     // Game state
     private int lives = 3;
     private int score = 0;
@@ -470,8 +473,10 @@ public class LevelTwoScreen implements Screen {
             return;
         }
 
-        boolean left = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A);
-        boolean right = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D);
+        touchControls.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+
+        boolean left = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A) || touchControls.isLeftPressed();
+        boolean right = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D) || touchControls.isRightPressed();
 
         if (left) {
             facingRight = false;
@@ -505,7 +510,8 @@ public class LevelTwoScreen implements Screen {
         // Jump
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)
                 || Gdx.input.isKeyJustPressed(Input.Keys.W)
-                || Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
+                || Gdx.input.isKeyJustPressed(Input.Keys.UP)
+                || touchControls.isJumpJustPressed()) {
             if (onGround) {
                 playerVY = JUMP_VELOCITY;
                 onGround = false;
@@ -518,7 +524,7 @@ public class LevelTwoScreen implements Screen {
         // Shooting (K) – ONLY ice bullets in this level
         bulletCooldownTimer -= delta;
         if (bulletCooldownTimer < 0) bulletCooldownTimer = 0;
-        if (Gdx.input.isKeyPressed(Input.Keys.K) && bulletCooldownTimer <= 0) {
+        if ((Gdx.input.isKeyPressed(Input.Keys.K) || touchControls.isFirePressed()) && bulletCooldownTimer <= 0) {
             shootIceBullet();
             bulletCooldownTimer = BULLET_COOLDOWN;
         }
@@ -774,6 +780,11 @@ public class LevelTwoScreen implements Screen {
         // 2. Bottom Controls Banner
         GameUI.renderControlsHint(batch, shapeRenderer, font, layout,
             "[ ◄ / ► / A / D ] Move   •   [ SPACE / W ] Jump   •   [ K ] Shoot Ice   •   [ ESC ] Menu", screenW);
+
+        // Virtual Touch Controls (Android / Touchscreens)
+        if (!playerDead && !levelComplete) {
+            touchControls.render(batch, shapeRenderer, font, layout, false);
+        }
 
         // 3. Victory or Defeat Modals
         boolean[] menuClicked = new boolean[1];

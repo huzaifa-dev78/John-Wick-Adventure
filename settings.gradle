@@ -1,5 +1,5 @@
 rootProject.name = "MiniPlatformer"
 
-include "core", "desktop"
+include "core", "desktop", "teavm"
 
 

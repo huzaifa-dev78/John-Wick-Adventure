@@ -33,16 +33,16 @@ An action-packed 2D side-scrolling platformer developed in **Java** using the **
 
 ---
 
-## ⌨️ Controls
+## ⌨️ Controls & Cross-Platform Playability
 
-| Action | Primary Key | Alternate Key |
+| Action | Desktop (PC / Mac) | Mobile / Android / Touchscreens |
 | :--- | :--- | :--- |
-| **Move Left / Right** | `A` / `D` | `LEFT` / `RIGHT` Arrow Keys |
-| **Jump** | `W` / `SPACE` | `UP` Arrow Key |
-| **Shoot Fire Bullet** | `J` | `X` |
-| **Shoot Ice Bullet** | `K` | `C` |
-| **Quick Level Select** | `1`, `2`, `3` *(Menu)* | — |
-| **Exit Game** | `ESC` | — |
+| **Move Left / Right** | `A` / `D` or `LEFT` / `RIGHT` | On-Screen **`<`** / **`>`** Buttons |
+| **Jump** | `W` / `SPACE` / `UP` | On-Screen **`JUMP`** Button |
+| **Shoot Fire Bullet** | `K` (Level 1, Level 3) | On-Screen **`FIRE`** Button |
+| **Shoot Ice Bullet** | `K` (Level 2) / `L` or `I` (Level 3) | On-Screen **`ICE`** Button |
+| **Menu / Pause / Exit** | `ESC` / Top Bar Button | Top Bar Exit Button / Modal Buttons |
+| **Quick Level Select** | `1`, `2`, `3` *(Menu)* | Tap Level Buttons on Touchscreen |
 
 ---
 
@@ -79,7 +79,40 @@ gradlew.bat desktop:run
 
 ---
 
-## 📦 Build Standalone Executable (For itch.io & Releases)
+## 🌐 Play in Browser & Deploy on itch.io (No Download Needed!)
+
+The game can be played directly in any web browser on **Android**, **Windows**, **macOS**, and **Linux** without downloading any files or apps.
+
+### 1. Build the itch.io Playable Package
+Run the automated packaging task:
+
+```bash
+# On Windows
+gradlew.bat :teavm:packageItchZip
+
+# On macOS / Linux
+./gradlew :teavm:packageItchZip
+```
+
+The output file is generated at:
+```
+dist/JohnWicksAdventure-HTML5.zip
+```
+
+### 2. Upload to itch.io
+1. Go to your itch.io dashboard and edit your game project (e.g. `https://itch.io/game/edit/...`).
+2. Under **Kind of project**, select: **HTML (You have a ZIP or HTML file that will play directly in the browser)**.
+3. In the **Uploads** section, click **Upload files** and select `dist/JohnWicksAdventure-HTML5.zip`.
+4. Once uploaded, check the box: **"This file will be played in the browser"**.
+5. Under **Embed options**:
+   - Set **Viewports dimensions**: `960` x `640` (the game will automatically scale to fit any screen).
+   - Check **Mobile friendly** (orientation: Landscape).
+   - Check **Automatically start on page load** and **Fullscreen button**.
+6. Click **Save & View Page** — your game is now live and 100% playable in-browser on Android, Windows, and Mac!
+
+---
+
+## 📦 Build Standalone Executable (Optional Desktop FAT JAR)
 
 To generate a single, self-contained **Fat JAR** containing all code, dependencies, and bundled assets:
 

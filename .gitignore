@@ -24,3 +24,5 @@ Thumbs.db
 *.zip
 *.tar.gz
 *.bak
+dist/
+teavm/build/

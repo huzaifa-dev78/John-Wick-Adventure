@@ -177,6 +177,9 @@ public class LevelOneScreen implements Screen {
     private boolean[] coinActive;
     private int coinsCollected = 0;
 
+    // Virtual Touch Controls (Android / Touchscreens)
+    private TouchControls touchControls = new TouchControls();
+
     // Player bullets (fire only)
     private float[] bulletX = new float[MAX_BULLETS];
     private float[] bulletY = new float[MAX_BULLETS];
@@ -443,8 +446,10 @@ public class LevelOneScreen implements Screen {
             return;
         }
 
-        boolean left = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A);
-        boolean right = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D);
+        touchControls.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
+
+        boolean left = Gdx.input.isKeyPressed(Input.Keys.LEFT) || Gdx.input.isKeyPressed(Input.Keys.A) || touchControls.isLeftPressed();
+        boolean right = Gdx.input.isKeyPressed(Input.Keys.RIGHT) || Gdx.input.isKeyPressed(Input.Keys.D) || touchControls.isRightPressed();
 
         if (left) {
             facingRight = false;
@@ -478,7 +483,8 @@ public class LevelOneScreen implements Screen {
         // Jump
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)
                 || Gdx.input.isKeyJustPressed(Input.Keys.W)
-                || Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
+                || Gdx.input.isKeyJustPressed(Input.Keys.UP)
+                || touchControls.isJumpJustPressed()) {
             if (onGround) {
                 playerVY = JUMP_VELOCITY;
                 onGround = false;
@@ -491,7 +497,7 @@ public class LevelOneScreen implements Screen {
         // Shooting (K) – ONLY fire bullets in this level
         bulletCooldownTimer -= delta;
         if (bulletCooldownTimer < 0) bulletCooldownTimer = 0;
-        if (Gdx.input.isKeyPressed(Input.Keys.K) && bulletCooldownTimer <= 0) {
+        if ((Gdx.input.isKeyPressed(Input.Keys.K) || touchControls.isFirePressed()) && bulletCooldownTimer <= 0) {
             shootFireBullet();
             bulletCooldownTimer = BULLET_COOLDOWN;
         }
@@ -765,6 +771,11 @@ public class LevelOneScreen implements Screen {
         // 2. Bottom Controls Banner
         GameUI.renderControlsHint(batch, shapeRenderer, font, layout,
             "[ ◄ / ► / A / D ] Move   •   [ SPACE / W ] Jump   •   [ K ] Shoot Fire   •   [ ESC ] Menu", screenW);
+
+        // Virtual Touch Controls (Android / Touchscreens)
+        if (!playerDead && !levelComplete) {
+            touchControls.render(batch, shapeRenderer, font, layout, false);
+        }
 
         // 3. Victory or Defeat Modals
         boolean[] menuClicked = new boolean[1];

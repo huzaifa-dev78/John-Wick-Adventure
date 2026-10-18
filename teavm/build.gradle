@@ -1,0 +1,136 @@
+plugins {
+    id 'java'
+    id 'org.teavm' version '0.10.2'
+}
+
+sourceCompatibility = 17
+targetCompatibility = 17
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation project(":core")
+    implementation "com.badlogicgames.gdx:gdx:1.12.1"
+    implementation "com.github.xpenatan.gdx-teavm:backend-teavm:1.0.0"
+}
+
+teavm {
+    js {
+        mainClass = "com.marioexample.teavm.TeaVMLauncher"
+        targetFileName = "app.js"
+    }
+}
+
+task buildWeb {
+    dependsOn generateJavaScript
+    group = "build"
+    description = "Packages the complete playable HTML5 build for itch.io"
+
+    doLast {
+        def distDir = file("$buildDir/dist/webapp")
+        distDir.mkdirs()
+
+        // 1. Copy app.js
+        copy {
+            from "$buildDir/generated/teavm/js/app.js"
+            into distDir
+        }
+        copy {
+            from "$buildDir/generated/teavm/js/app.js"
+            into "$distDir/teavm"
+        }
+
+        // 2. Copy howler.js & gdx.wasm.js
+        copy {
+            from "$projectDir/howler.js"
+            into distDir
+        }
+        copy {
+            from "$projectDir/gdx.wasm.js"
+            into distDir
+        }
+        copy {
+            from "$projectDir/howler.js"
+            into "$distDir/scripts"
+        }
+        copy {
+            from "$projectDir/gdx.wasm.js"
+            into "$distDir/scripts"
+        }
+
+        // 3. Copy index.html
+        copy {
+            from "$projectDir/src/main/webapp/index.html"
+            into distDir
+        }
+
+        // 4. Copy game assets
+        def assetsDir = file("$projectDir/../assets")
+        copy {
+            from assetsDir
+            into "$distDir/assets"
+            exclude "unused assets/**"
+        }
+        copy {
+            from assetsDir
+            into distDir
+            exclude "unused assets/**"
+        }
+
+        // 5. Extract default LibGDX font (lsans-15) from gdx jar
+        configurations.compileClasspath.files.each { jarFile ->
+            if (jarFile.name.startsWith("gdx-") && jarFile.name.endsWith(".jar")) {
+                copy {
+                    from zipTree(jarFile).matching {
+                        include "com/badlogic/gdx/utils/lsans-15.*"
+                    }
+                    into "$distDir/assets"
+                }
+                copy {
+                    from zipTree(jarFile).matching {
+                        include "com/badlogic/gdx/utils/lsans-15.*"
+                    }
+                    into distDir
+                }
+            }
+        }
+
+        // 6. Generate assets.txt manifest
+        def assetsTxtLines = []
+        def fontDir = file("$distDir/assets/com/badlogic/gdx/utils")
+        if (fontDir.exists()) {
+            fontDir.eachFile { f ->
+                if (f.isFile()) {
+                    assetsTxtLines << "c:b:com/badlogic/gdx/utils/${f.name}:${f.length()}"
+                }
+            }
+        }
+
+        def assetsFolder = file("$distDir/assets")
+        assetsFolder.eachFileRecurse { f ->
+            if (f.isFile() && f.name != "assets.txt" && !f.path.contains("com" + File.separator + "badlogic")) {
+                def rel = assetsFolder.toPath().relativize(f.toPath()).toString().replace('\\', '/')
+                assetsTxtLines << "i:b:${rel}:${f.length()}"
+            }
+        }
+
+        def manifestContent = assetsTxtLines.join("\n") + "\n"
+        file("$distDir/assets/assets.txt").text = manifestContent
+        file("$distDir/assets.txt").text = manifestContent
+        println "Generated assets.txt with ${assetsTxtLines.size()} assets."
+    }
+}
+
+task packageItchZip(type: Zip) {
+    dependsOn buildWeb
+    group = "build"
+    description = "Packages the itch.io playable HTML5 ZIP distribution"
+
+    archiveFileName = "JohnWicksAdventure-HTML5.zip"
+    destinationDirectory = file("$rootDir/dist")
+
+    from "$buildDir/dist/webapp"
+}
